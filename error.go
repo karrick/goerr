@@ -34,18 +34,27 @@ func (s optionCommentSlice) Len() int           { return len(s) }
 func (x optionCommentSlice) Less(i, j int) bool { return x[i].index > x[j].index }
 func (x optionCommentSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-// MaybeWrap returns a new Error that wraps err, or returns nil when err is
-// nil.
-func MaybeWrap(err error) *Error {
+// New returns a new Error with a formatted message.
+func New(f string, a ...any) *Error {
+	return &Error{msg: fmt.Sprintf(f, a...)}
+}
+
+// Wrap returns nil when err is nil; otherwise returns a new Error that wraps
+// err.
+func Wrap(err error) *Error {
 	if err == nil {
 		return nil
 	}
 	return &Error{err: err}
 }
 
-// New returns a new Error with a formatted message.
-func New(f string, a ...any) *Error {
-	return &Error{msg: fmt.Sprintf(f, a...)}
+// Wrapf returns nil when err is nil; otherwise returns a new formatted Error
+// that wraps err.
+func Wrapf(err error, f string, a ...any) *Error {
+	if err == nil {
+		return nil
+	}
+	return &Error{err: err, msg: fmt.Sprintf(f, a...)}
 }
 
 // Error returns an error message suitable for display.
@@ -180,15 +189,6 @@ func (e *Error) WithLinesBetweenMessageAndOption(lines []string) *Error {
 	return e
 }
 
-// WithMessage stores a formatted message for the error.
-func (e *Error) WithMessage(f string, a ...any) *Error {
-	if e == nil {
-		return nil
-	}
-	e.msg = fmt.Sprintf(f, a...)
-	return e
-}
-
 // WithOptionComment causes an additional error message line to be printed
 // that underlines the option indexed by index, with comment.
 func (e *Error) WithOptionComment(index int, comment string) *Error {
@@ -220,15 +220,6 @@ func (e *Error) WithTemporary(temporary bool) *Error {
 	}
 	e.isTemporarySet = true
 	e.temporary = temporary
-	return e
-}
-
-// WithWrap stores err as the value to be returned by the Unwrap method.
-func (e *Error) WithWrap(err error) *Error {
-	if e == nil {
-		return nil
-	}
-	e.err = err
 	return e
 }
 

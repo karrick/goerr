@@ -78,12 +78,11 @@ func ExampleWithOptionComments() {
 func parseIntegerOption(s string) (int, error) {
 	n, err := strconv.Atoi(s)
 
-	// NOTE: MaybeWrap will return a nil error if given an error, but wrap err
+	// NOTE: MaybeWrapf will return a nil error if given an error, but wrap err
 	// such that other attributes may be attached to it if err is non-nil.
 
-	return n, goerr.MaybeWrap(err).
-		WithExitCode(2).
-		WithMessage("cannot parse option")
+	return n, goerr.Wrapf(err, "cannot parse option").
+		WithExitCode(2)
 }
 
 func ExampleMaybeWrapNonNilError() {
@@ -124,10 +123,9 @@ func TestError(t *testing.T) {
 					// instance.
 					var nilErr error
 
-					ee := goerr.MaybeWrap(nilErr).
+					ee := goerr.Wrapf(nilErr, "cannot configure: %v", "bad-data").
 						WithExitCode(13).
-						WithTemporary(true).
-						WithMessage("cannot configure: %v", "bad-data")
+						WithTemporary(true)
 
 					if got, want := ee, (*goerr.Error)(nil); got != want {
 						t.Errorf("GOT: %v; WANT: %v", got, want)
@@ -145,7 +143,7 @@ func TestError(t *testing.T) {
 				t.Run("sans message", func(t *testing.T) {
 					err := fmt.Errorf("cannot parse int: %q", "123abc")
 
-					err = goerr.MaybeWrap(err).
+					err = goerr.Wrap(err).
 						WithExitCode(13).
 						WithTemporary(true)
 
@@ -171,8 +169,7 @@ func TestError(t *testing.T) {
 				t.Run("with message", func(t *testing.T) {
 					err := fmt.Errorf("cannot parse int: %q", "123abc")
 
-					err = goerr.MaybeWrap(err).
-						WithMessage("cannot configure").
+					err = goerr.Wrapf(err, "cannot configure").
 						WithExitCode(13).
 						WithTemporary(true)
 
@@ -262,9 +259,8 @@ func TestError(t *testing.T) {
 			})
 
 			t.Run("with message", func(t *testing.T) {
-				var ee goerr.Error
+				ee := goerr.New("foo: %v", "bar")
 
-				ee.WithMessage("foo: %v", "bar")
 				if got, want := ee.Error(), "foo: bar"; got != want {
 					t.Errorf("GOT: %q; WANT: %q", got, want)
 				}
@@ -273,18 +269,16 @@ func TestError(t *testing.T) {
 
 		t.Run("with error", func(t *testing.T) {
 			t.Run("sans message", func(t *testing.T) {
-				var ee goerr.Error
+				ee := goerr.Wrap(fmt.Errorf("foo: %v", "bar"))
 
-				ee.WithWrap(fmt.Errorf("foo: %v", "bar"))
 				if got, want := ee.Error(), "foo: bar"; got != want {
 					t.Errorf("GOT: %q; WANT: %q", got, want)
 				}
 			})
 
 			t.Run("with message", func(t *testing.T) {
-				var ee goerr.Error
+				ee := goerr.New("foo: %v", "bar")
 
-				ee.WithMessage("foo: %v", "bar")
 				if got, want := ee.Error(), "foo: bar"; got != want {
 					t.Errorf("GOT: %q; WANT: %q", got, want)
 				}
@@ -378,9 +372,7 @@ func TestError(t *testing.T) {
 		})
 
 		t.Run("with wrapped error", func(t *testing.T) {
-			ee := new(goerr.Error)
-
-			ee = ee.WithWrap(fmt.Errorf("foo: %v", "bar"))
+			ee := goerr.Wrap(fmt.Errorf("foo: %v", "bar"))
 
 			if got, want := ee.Unwrap().Error(), "foo: bar"; got != want {
 				t.Errorf("GOT: %v; WANT: %v", got, want)

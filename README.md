@@ -53,17 +53,18 @@ optionally providing additional context about the error.
 func parseIntegerOption(s string) (int, error) {
 	n, err := strconv.Atoi(s)
 
-	// NOTE: MaybeWrapf will return a nil error if given an error, but wrap err
-	// such that other attributes may be attached to it if err is non-nil.
+	// NOTE: Wrap and Wrapf will return a nil error if given an error, but
+	// wrap err such that other attributes may be attached to it if err is
+	// non-nil.
 
 	return n, goerr.Wrapf(err, "cannot parse option").
-		WithExitCode(13)
+		WithExitCode(2)
 }
 
 func ExampleMaybeWrapNonNilError() {
 	value, err := parseIntegerOption("123")
 
-	// NOTE: Because MaybeWrap returns nil when it is given a nil error to
+	// NOTE: Because Wrap and Wrapf return nil when it is given a nil error to
 	// wrap, and the nil error has exit code value of 0 and temporary value of
 	// false, the output below will be 123, <nil>, and 0.
 
@@ -85,6 +86,6 @@ func ExampleMaybeWrapNilError() {
 	// Output:
 	// 0
 	// cannot parse option: strconv.Atoi: parsing "123abc": invalid syntax
-	// 13
+	// 2
 }
 ```
